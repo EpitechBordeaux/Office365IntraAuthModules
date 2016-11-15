@@ -1,0 +1,16 @@
+GO:
+- Add ENV
+- Add Logger
+
+JAVA:
+- Do JAVA
+
+NodeJS:
+- Do NodeJS Module
+
+Python:
+- Add Logger
+
+ALL:
+- Push on perso
+- Fork on Epitech BDX

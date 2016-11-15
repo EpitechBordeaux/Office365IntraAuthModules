@@ -29,7 +29,23 @@ func New(email string, password string) *EpiJar {
 	return &tmp
 }
 
+func (ej EpiJar) GetHTTP() *http.Client {
+	return ej.client
+}
+
 func (ej EpiJar) Auth() {
+	// Request Intra
+	req, _ := http.NewRequest("GET", "https://intra.epitech.eu", nil)
+	resp, err := ej.client.Do(req)
+	if err != nil {
+		panic(nil)
+	}
+	body, _ := ioutil.ReadAll(resp.Body)
+	resp.Body.Close()
+	fmt.Println(string(body))
+}
+
+func (ej EpiJar) TMP() {
 	postData := url.Values{}
 	postData.Set("keyword", "尹相杰")
 	postData.Set("smblog", "搜微博")
