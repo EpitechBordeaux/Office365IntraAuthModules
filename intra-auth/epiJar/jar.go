@@ -2,7 +2,6 @@ package epiJar
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"html"
 )
 
 type (
@@ -46,11 +46,11 @@ func (ej EpiJar) Auth() {
 	body, _ := ioutil.ReadAll(resp.Body)
 	re := regexp.MustCompile("(https://login.microsoftonline([^\"]+))")
 	m := re.FindStringSubmatch(string(body))
-	url := "https://login.microsoftonline" + string(m[2])
-	log.Println("Office365 URL: " + url)
+	Office365url := "https://login.microsoftonline" + string(m[2])
+	log.Println("Office365 URL: " + Office365url)
 
 	// Request URL for CONTEXT
-	req, _ = http.NewRequest("GET", url, nil)
+	req, _ = http.NewRequest("GET", Office365url, nil)
 	resp, err = ej.client.Do(req)
 	if err != nil {
 		panic(nil)
@@ -83,26 +83,54 @@ func (ej EpiJar) Auth() {
 	}
 	body, _ = ioutil.ReadAll(resp.Body)
 	epitechLoginPage := string(body)
+	re = regexp.MustCompile("action=\"/adfs([^\"]+)")
+	m = re.FindStringSubmatch(epitechLoginPage)
+	loginUrl := "https://sts.epitech.eu/adfs" + string(m[1])
+	log.Println("loginUrl: " + loginUrl)
 
-	fmt.Println(epitechLoginPage)
-
-	resp.Body.Close()
-}
-
-func (ej EpiJar) TMP() {
+	//Check Password
 	postData := url.Values{}
-	postData.Set("keyword", "尹相杰")
-	postData.Set("smblog", "搜微博")
-	req, _ := http.NewRequest("POST", "http://weibo.cn/search/?vt=4", strings.NewReader(postData.Encode()))
-	resp, err := ej.client.Do(req)
+	postData.Set("UserName", ej.email)
+	postData.Set("Password", ej.password)
+	postData.Set("Kmsi", "true")
+	postData.Set("AuthMethod", "FormsAuthentication")
+	req, _ = http.NewRequest("POST", loginUrl, strings.NewReader(postData.Encode()))
+	resp, err = ej.client.Do(req)
 	if err != nil {
 		panic(nil)
 	}
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ = ioutil.ReadAll(resp.Body)
+	re = regexp.MustCompile("action=\"([^\"]+)")
+	m = re.FindStringSubmatch(string(body))
+	microsoftLoginUrl := string(m[1])
+
+	re = regexp.MustCompile("name=\"wa\" value=\"([^\"]+)")
+	m = re.FindStringSubmatch(string(body))
+	wa := m[1]
+
+	re = regexp.MustCompile("name=\"wresult\" value=\"([^\"]+)")
+	m = re.FindStringSubmatch(string(body))
+	wresult := m[1]
+
+	re = regexp.MustCompile("name=\"wctx\" value=\"([^\"]+)")
+	m = re.FindStringSubmatch(string(body))
+	wctx := m[1]
+
+	postData = url.Values{}
+	postData.Set("wa", wa)
+	postData.Set("wresult", html.UnescapeString(wresult))
+	postData.Set("wctx", html.UnescapeString(wctx))
+	req, _ = http.NewRequest("POST", microsoftLoginUrl, strings.NewReader(postData.Encode()))
+	resp, err = ej.client.Do(req)
+	if err != nil {
+		panic(nil)
+	}
+	body, _ = ioutil.ReadAll(resp.Body)
+
+	// Check Grant
 	resp.Body.Close()
-	fmt.Println(string(body))
 }
 
-func GetJar() {
-
+func (ej EpiJar) GetClient() *http.Client {
+	return ej.client
 }

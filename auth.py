@@ -38,7 +38,6 @@ with requests.Session() as s:
     if body.find("consent_accept_form") != -1:
         print ("Consent needed. Granting...\n")
 
-
     cookies = s.cookies.get_dict()
 
     print(s.get("https://intra.epitech.eu/?format=json").text)

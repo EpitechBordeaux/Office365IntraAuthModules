@@ -1,6 +1,5 @@
 GO:
 - Add ENV
-- Add Logger
 
 JAVA:
 - Do JAVA
